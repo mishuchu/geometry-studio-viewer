@@ -36,6 +36,10 @@ class App {
             const jsonData = await response.json();
             console.log('Case Loaded:', jsonData.caseName);
             
+            // Update UI Panel
+            document.getElementById('case-title').innerText = jsonData.caseName || 'Untitled Case';
+            document.getElementById('case-description').innerText = jsonData.description || 'No description available for this test case.';
+            
             const { geometry, markers, nurbs } = GeometryParser.parseMesh(jsonData);
             this.viewer.loadMesh(geometry, markers, nurbs);
         } catch (error) {

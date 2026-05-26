@@ -19,8 +19,24 @@ export class UIController {
     }
 
     init(callbacks) {
+        const galleryFolder = this.pane.addFolder({
+            title: 'Visual Test Gallery (Real Algo Tests)',
+        });
+
+        galleryFolder.addBinding(this.params, 'case', {
+            label: 'Select Case',
+            options: {
+                'Mutation: Linear': 'visual_tests/mutation_linear.json',
+                'Mutation: Fast': 'visual_tests/mutation_fast.json',
+                'CATIA Coupling': 'visual_tests/catia_coupling.json',
+                'Fairing: OFF': 'visual_tests/fairing_off.json',
+                'Fairing: ON': 'visual_tests/fairing_on.json',
+            }
+        }).on('change', (ev) => callbacks.onCaseChange(ev.value));
+
         const scenarioFolder = this.pane.addFolder({
-            title: 'Scenarios (100 Cases)',
+            title: 'Synthetic Scenarios (100 Cases)',
+            expanded: false
         });
 
         const caseOptions = {};
