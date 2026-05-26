@@ -3,12 +3,12 @@ import { Pane } from 'tweakpane';
 export class UIController {
     constructor(callbacks) {
         this.pane = new Pane({
-            title: 'Geometry Inspector',
+            title: 'Geometry Studio',
             expanded: true,
         });
 
         this.params = {
-            case: 'cases100/case1.json',
+            case: callbacks.manifest.length > 0 ? callbacks.manifest[0].file : '',
             wireframe: false,
             showNormals: false,
             grid: true,
@@ -20,31 +20,15 @@ export class UIController {
 
     init(callbacks) {
         const galleryFolder = this.pane.addFolder({
-            title: 'Visual Test Gallery (Real Algo Tests)',
-        });
-
-        galleryFolder.addBinding(this.params, 'case', {
-            label: 'Select Case',
-            options: {
-                'Mutation: Linear': 'visual_tests/mutation_linear.json',
-                'Mutation: Fast': 'visual_tests/mutation_fast.json',
-                'CATIA Coupling': 'visual_tests/catia_coupling.json',
-                'Fairing: OFF': 'visual_tests/fairing_off.json',
-                'Fairing: ON': 'visual_tests/fairing_on.json',
-            }
-        }).on('change', (ev) => callbacks.onCaseChange(ev.value));
-
-        const scenarioFolder = this.pane.addFolder({
-            title: 'Synthetic Scenarios (100 Cases)',
-            expanded: false
+            title: 'Visual Test Gallery (Dynamic)',
         });
 
         const caseOptions = {};
-        for (let i = 1; i <= 100; i++) {
-            caseOptions[`Case ${i}`] = `cases100/case${i}.json`;
-        }
+        callbacks.manifest.forEach(item => {
+            caseOptions[item.name] = item.file;
+        });
 
-        scenarioFolder.addBinding(this.params, 'case', {
+        galleryFolder.addBinding(this.params, 'case', {
             label: 'Select Case',
             options: caseOptions
         }).on('change', (ev) => callbacks.onCaseChange(ev.value));
@@ -76,4 +60,3 @@ export class UIController {
         });
     }
 }
-

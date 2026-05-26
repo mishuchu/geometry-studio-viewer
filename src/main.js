@@ -6,14 +6,23 @@ class App {
     constructor() {
         this.viewer = new Viewer3D();
         this.ui = null;
-        this.currentCase = 'cases100/case1.json';
+        this.currentCase = null;
     }
 
     async init() {
         const container = document.getElementById('app');
         this.viewer.init(container);
 
+        // 1. Fetch Manifest
+        const response = await fetch('/src/mock/manifest.json');
+        const manifest = await response.json();
+        
+        if (manifest.length > 0) {
+            this.currentCase = manifest[0].file;
+        }
+
         this.ui = new UIController({
+            manifest: manifest, // Pass manifest to UI
             onCaseChange: (caseFile) => {
                 this.currentCase = caseFile;
                 this.loadData();
@@ -25,7 +34,7 @@ class App {
             onReload: () => this.loadData()
         });
 
-        await this.loadData();
+        if (this.currentCase) await this.loadData();
     }
 
     async loadData() {
