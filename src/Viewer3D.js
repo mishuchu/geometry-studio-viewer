@@ -137,16 +137,32 @@ export class Viewer3D {
     addNurbs(nurbsData) {
         if (nurbsData.curves) {
             nurbsData.curves.forEach((data, index) => {
-                const cps = [];
-                for (let i = 0; i < data.controlPoints.length; i += 3) {
-                    cps.push(new THREE.Vector4(data.controlPoints[i], data.controlPoints[i+1], data.controlPoints[i+2], 1));
+                try {
+                    const cps = [];
+                    for (let i = 0; i < data.controlPoints.length; i += 3) {
+                        cps.push(new THREE.Vector4(data.controlPoints[i], data.controlPoints[i+1], data.controlPoints[i+2], 1));
+                    }
+                    const curve = new NURBSCurve(data.degree, data.knots, cps);
+                    const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(200));
+                    
+                    let color = 0x3366ff; // Default Blue
+                    let dash = false;
+                    if (data.type === 'section') color = 0xff3333; // Red
+                    if (data.type === 'guide') color = 0x33cc33; // Green
+                    if (data.type === 'spine') { color = 0x8800ff; dash = true; } // Purple Dash
+
+                    const material = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
+                    const line = new THREE.Line(geometry, material);
+                    this.nurbsGroup.add(line);
+
+                    // Add Spatial Label
+                    if (data.label) {
+                        const midPoint = curve.getPoint(0.5);
+                        this.addLabel(data.label, midPoint, color);
+                    }
+                } catch (e) {
+                    console.error("Curve Render Error:", e, data);
                 }
-                const curve = new NURBSCurve(data.degree, data.knots, cps);
-                const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(100));
-                
-                let color = (index === 0) ? 0xff3333 : (index <= 3 ? 0x3366ff : 0x33cc33);
-                const material = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
-                this.nurbsGroup.add(new THREE.Line(geometry, material));
             });
         }
 
@@ -188,6 +204,35 @@ export class Viewer3D {
                 }
             });
         }
+    }
+
+    addLabel(text, position, color) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 64;
+
+        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        context.fillRect(0, 0, 256, 64);
+        context.lineWidth = 4;
+        context.strokeStyle = '#' + new THREE.Color(color).getHexString();
+        context.strokeRect(0, 0, 256, 64);
+
+        context.font = 'Bold 24px Arial';
+        context.fillStyle = '#1a1a1a';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(text, 128, 32);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        
+        sprite.position.copy(position);
+        sprite.position.y += 0.5; // Offset slightly above
+        sprite.scale.set(2, 0.5, 1);
+        
+        this.nurbsGroup.add(sprite);
     }
 
     setWireframe(enabled) { this.material.wireframe = enabled; }
