@@ -9,6 +9,7 @@ export class UIController {
 
         this.params = {
             case: callbacks.manifest.length > 0 ? callbacks.manifest[0].file : '',
+            dataSource: callbacks.dataSource,
             wireframe: false,
             showNormals: false,
             grid: true,
@@ -19,6 +20,19 @@ export class UIController {
     }
 
     init(callbacks) {
+        const configFolder = this.pane.addFolder({
+            title: 'Data Configuration',
+            expanded: false
+        });
+
+        configFolder.addBinding(this.params, 'dataSource', {
+            label: 'Source Path'
+        }).on('change', (ev) => callbacks.onSourceChange(ev.value));
+
+        configFolder.addButton({
+            title: 'Refresh Gallery',
+        }).on('click', () => callbacks.onSourceChange(this.params.dataSource));
+
         const galleryFolder = this.pane.addFolder({
             title: 'Visual Test Gallery (Dynamic)',
         });
