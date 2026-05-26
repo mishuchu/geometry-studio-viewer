@@ -1,0 +1,110 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('Test box'),'2;1');
+FILE_NAME('test_box.stp','2024-01-01T00:00:00',('Mishuchu'),(''),'Geometry Studio','OpenCASCADE','Unknown');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));
+ENDSEC;
+DATA;
+/* Vertices */
+#1=CARTESIAN_POINT('',(0.,0.,0.));
+#2=CARTESIAN_POINT('',(1.,0.,0.));
+#3=CARTESIAN_POINT('',(1.,1.,0.));
+#4=CARTESIAN_POINT('',(0.,1.,0.));
+#5=CARTESIAN_POINT('',(0.,0.,1.));
+#6=CARTESIAN_POINT('',(1.,0.,1.));
+#7=CARTESIAN_POINT('',(1.,1.,1.));
+#8=CARTESIAN_POINT('',(0.,1.,1.));
+/* Vertex Points */
+#10=VERTEX_POINT('',#1);
+#11=VERTEX_POINT('',#2);
+#12=VERTEX_POINT('',#3);
+#13=VERTEX_POINT('',#4);
+#14=VERTEX_POINT('',#5);
+#15=VERTEX_POINT('',#6);
+#16=VERTEX_POINT('',#7);
+#17=VERTEX_POINT('',#8);
+/* Edges (line references to vertex points, not cartesian points) */
+#20=LINE('',#100,#101);
+#21=LINE('',#102,#103);
+#22=LINE('',#104,#105);
+#23=LINE('',#106,#107);
+#24=LINE('',#108,#109);
+#25=LINE('',#110,#111);
+#26=LINE('',#112,#113);
+#27=LINE('',#114,#115);
+#28=LINE('',#116,#117);
+#29=LINE('',#118,#119);
+#30=LINE('',#120,#121);
+#31=LINE('',#122,#123);
+/* Edge geometry placement */
+#100=CARTESIAN_POINT('',(0.,0.,0.));
+#101=CARTESIAN_POINT('',(1.,0.,0.));
+#102=CARTESIAN_POINT('',(1.,0.,0.));
+#103=CARTESIAN_POINT('',(1.,1.,0.));
+#104=CARTESIAN_POINT('',(1.,1.,0.));
+#105=CARTESIAN_POINT('',(0.,1.,0.));
+#106=CARTESIAN_POINT('',(0.,1.,0.));
+#107=CARTESIAN_POINT('',(0.,0.,0.));
+#108=CARTESIAN_POINT('',(0.,0.,1.));
+#109=CARTESIAN_POINT('',(1.,0.,1.));
+#110=CARTESIAN_POINT('',(1.,0.,1.));
+#111=CARTESIAN_POINT('',(1.,1.,1.));
+#112=CARTESIAN_POINT('',(1.,1.,1.));
+#113=CARTESIAN_POINT('',(0.,1.,1.));
+#114=CARTESIAN_POINT('',(0.,1.,1.));
+#115=CARTESIAN_POINT('',(0.,0.,1.));
+#116=CARTESIAN_POINT('',(0.,0.,0.));
+#117=CARTESIAN_POINT('',(0.,0.,1.));
+#118=CARTESIAN_POINT('',(1.,0.,0.));
+#119=CARTESIAN_POINT('',(1.,0.,1.));
+#120=CARTESIAN_POINT('',(1.,1.,0.));
+#121=CARTESIAN_POINT('',(1.,1.,1.));
+#122=CARTESIAN_POINT('',(0.,1.,0.));
+#123=CARTESIAN_POINT('',(0.,1.,1.));
+/* Edge curves */
+#200=EDGE_CURVE('',#10,#11,#20,.T.);
+#201=EDGE_CURVE('',#11,#12,#21,.T.);
+#202=EDGE_CURVE('',#12,#13,#22,.T.);
+#203=EDGE_CURVE('',#13,#10,#23,.T.);
+#204=EDGE_CURVE('',#14,#15,#24,.T.);
+#205=EDGE_CURVE('',#15,#16,#25,.T.);
+#206=EDGE_CURVE('',#16,#17,#26,.T.);
+#207=EDGE_CURVE('',#17,#14,#27,.T.);
+#208=EDGE_CURVE('',#10,#14,#28,.T.);
+#209=EDGE_CURVE('',#11,#15,#29,.T.);
+#210=EDGE_CURVE('',#12,#16,#30,.T.);
+#211=EDGE_CURVE('',#13,#17,#31,.T.);
+/* Edge loops */
+#300=EDGE_LOOP('',(#200,#201,#202,#203));
+#301=EDGE_LOOP('',(#204,#205,#206,#207));
+#302=EDGE_LOOP('',(#208,#209,#210,#211));
+/* Face bounds */
+#400=FACE_OUTER_BOUND('',#300,.T.);
+#401=FACE_OUTER_BOUND('',#301,.T.);
+#402=FACE_OUTER_BOUND('',#302,.T.);
+/* Planes for faces */
+#500=PLANE('',#600);
+#501=PLANE('',#601);
+#502=PLANE('',#602);
+#600=AXIS2_PLACEMENT_3D('',#650,#651,#652);
+#601=AXIS2_PLACEMENT_3D('',#660,#661,#662);
+#602=AXIS2_PLACEMENT_3D('',#670,#671,#672);
+#650=CARTESIAN_POINT('',(0.,0.,0.));
+#651=DIRECTION('',(0.,0.,1.));
+#652=DIRECTION('',(1.,0.,0.));
+#660=CARTESIAN_POINT('',(0.,0.,1.));
+#661=DIRECTION('',(0.,0.,1.));
+#662=DIRECTION('',(1.,0.,0.));
+#670=CARTESIAN_POINT('',(0.,0.,0.));
+#671=DIRECTION('',(1.,0.,0.));
+#672=DIRECTION('',(0.,1.,0.));
+/* Advanced faces */
+#700=ADVANCED_FACE('',(#400),#500,.T.);
+#701=ADVANCED_FACE('',(#401),#501,.T.);
+#702=ADVANCED_FACE('',(#402),#502,.T.);
+/* Closed shell */
+#800=CLOSED_SHELL('',(#700,#701,#702));
+/* Manifold solid */
+#900=MANIFOLD_SOLID_BREP('TestBox',#800);
+ENDSEC;
+END-ISO-10303-21;
