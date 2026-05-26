@@ -80,7 +80,7 @@ export class Viewer3D {
         if (this.mesh) {
             this.scene.remove(this.mesh);
             if (this.normalsHelper) this.scene.remove(this.normalsHelper);
-            this.mesh.geometry.dispose();
+            if (this.mesh.geometry) this.mesh.geometry.dispose();
         }
         
         // Clear groups
@@ -88,26 +88,53 @@ export class Viewer3D {
             while(group.children.length > 0) {
                 const child = group.children[0];
                 if (child.geometry) child.geometry.dispose();
-                if (child.material) child.material.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                    else child.material.dispose();
+                }
                 group.remove(child);
             }
         });
 
-        this.mesh = new THREE.Mesh(geometry, this.material);
-        this.scene.add(this.mesh);
+        // Ensure geometry is a valid THREE.BufferGeometry before creating Mesh
+        if (geometry && geometry.isBufferGeometry) {
+            this.mesh = new THREE.Mesh(geometry, this.material);
+            this.scene.add(this.mesh);
+        } else {
+            console.warn("No valid mesh geometry provided, skipping mesh creation.");
+            this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), this.material);
+        }
 
         this.addMarkers(markers);
         if (nurbs) this.addNurbs(nurbs);
 
-        // Auto-center
+        // Auto-center with robust fallback
         const bbox = new THREE.Box3();
-        if (geometry.attributes.position.count > 0) {
-            geometry.computeBoundingBox();
-            bbox.copy(geometry.boundingBox);
-        } else if (nurbs && nurbs.curves && nurbs.curves.length > 0) {
+        
+        // 1. Check Mesh Geometry
+        if (this.mesh && this.mesh.geometry && this.mesh.geometry.attributes && this.mesh.geometry.attributes.position) {
+            this.mesh.geometry.computeBoundingBox();
+            bbox.expandByObject(this.mesh);
+        }
+        
+        // 2. Fallback to NURBS Curves
+        if (nurbs && nurbs.curves) {
             nurbs.curves.forEach(c => {
-                for (let i = 0; i < c.controlPoints.length; i += 3) {
-                    bbox.expandByPoint(new THREE.Vector3(c.controlPoints[i], c.controlPoints[i+1], c.controlPoints[i+2]));
+                if (c.controlPoints) {
+                    for (let i = 0; i < c.controlPoints.length; i += 3) {
+                        bbox.expandByPoint(new THREE.Vector3(c.controlPoints[i], c.controlPoints[i+1], c.controlPoints[i+2]));
+                    }
+                }
+            });
+        }
+
+        // 3. Fallback to NURBS Surfaces
+        if (nurbs && nurbs.surfaces) {
+            nurbs.surfaces.forEach(s => {
+                if (s.controlPoints) {
+                    for (let i = 0; i < s.controlPoints.length; i += 3) {
+                        bbox.expandByPoint(new THREE.Vector3(s.controlPoints[i], s.controlPoints[i+1], s.controlPoints[i+2]));
+                    }
                 }
             });
         }
@@ -116,9 +143,17 @@ export class Viewer3D {
             const center = new THREE.Vector3();
             bbox.getCenter(center);
             const offset = center.clone().multiplyScalar(-1);
-            this.mesh.position.copy(offset);
+            
+            if (this.mesh) this.mesh.position.copy(offset);
             this.markersGroup.position.copy(offset);
             this.nurbsGroup.position.copy(offset);
+            
+            // Adjust camera to fit
+            const size = bbox.getSize(new THREE.Vector3()).length();
+            const camDist = Math.max(size * 1.2, 5);
+            this.camera.position.set(camDist, camDist, camDist);
+            this.controls.target.set(0, 0, 0);
+            this.controls.update();
         }
     }
 
@@ -135,6 +170,7 @@ export class Viewer3D {
     }
 
     addNurbs(nurbsData) {
+        console.log("Processing NURBS Data:", nurbsData);
         if (nurbsData.curves) {
             nurbsData.curves.forEach((data, index) => {
                 try {
@@ -143,17 +179,19 @@ export class Viewer3D {
                         cps.push(new THREE.Vector4(data.controlPoints[i], data.controlPoints[i+1], data.controlPoints[i+2], 1));
                     }
                     const curve = new NURBSCurve(data.degree, data.knots, cps);
-                    const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(200));
+                    const curvePoints = curve.getPoints(200);
+                    const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
                     
                     let color = 0x3366ff; // Default Blue
-                    let dash = false;
                     if (data.type === 'section') color = 0xff3333; // Red
                     if (data.type === 'guide') color = 0x33cc33; // Green
-                    if (data.type === 'spine') { color = 0x8800ff; dash = true; } // Purple Dash
+                    if (data.type === 'spine') color = 0x8800ff; // Purple
 
                     const material = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
                     const line = new THREE.Line(geometry, material);
                     this.nurbsGroup.add(line);
+
+                    console.log(`Added curve [${data.type}]: ${data.label || index} with ${curvePoints.length} points.`);
 
                     // Add Spatial Label
                     if (data.label) {
