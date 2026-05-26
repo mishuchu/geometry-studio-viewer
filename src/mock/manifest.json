@@ -1,0 +1,22 @@
+[
+  {
+    "file": "generated_cases/variational_fairing.json",
+    "id": "variational_fairing",
+    "name": "Fairing ON: Variational Smoothing"
+  },
+  {
+    "file": "generated_cases/mutation_sharp.json",
+    "id": "mutation_sharp",
+    "name": "Mutation: Circle to Square (Sharp)"
+  },
+  {
+    "file": "generated_cases/catia_coupling.json",
+    "id": "catia_coupling",
+    "name": "CATIA Coupling: Tangency Alignment"
+  },
+  {
+    "file": "generated_cases/mutation_data_driven.json",
+    "id": "mutation_data_driven",
+    "name": "Data-Driven Circle-Square"
+  }
+]
