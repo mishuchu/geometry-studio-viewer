@@ -4,9 +4,6 @@
   "version": "1.0.0",
   "description": "A universal, high-performance web-based viewer for geometry debugging and visualization.",
   "type": "module",
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
