@@ -1,6 +1,7 @@
 import { Viewer3D } from './Viewer3D.js';
 import { GeometryParser } from './GeometryParser.js';
 import { UIController } from './UIController.js';
+import { STPImporter } from './STPImporter.js';
 
 class App {
     constructor() {
@@ -13,7 +14,6 @@ class App {
     async init() {
         const container = document.getElementById('app');
         this.viewer.init(container);
-
         // Load initially from default or URL param
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('data')) {
@@ -34,14 +34,11 @@ class App {
             if (manifest.length > 0) {
                 this.currentCase = manifest[0].file;
             }
-
             // (Re)init UI
             if (this.ui) {
-                // Simplified: just reload or implement a clear method if needed
-                window.location.reload(); 
+                window.location.reload();
                 return;
             }
-
             this.ui = new UIController({
                 manifest: manifest,
                 dataSource: this.dataSourceBase,
@@ -72,7 +69,6 @@ class App {
         document.getElementById('case-title').innerText = 'Data Source Error';
         document.getElementById('case-description').innerText = msg + '\n\nTry providing a path relative to the server root (e.g. /src/mock/data_source)';
         
-        // Even in error, show UI to allow changing source
         if (!this.ui) {
             this.ui = new UIController({
                 manifest: [],
@@ -90,16 +86,25 @@ class App {
             const url = `${this.dataSourceBase}/${this.currentCase}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch case: ${this.currentCase}`);
-            
-            const jsonData = await response.json();
-            console.log('Case Loaded:', jsonData.caseName);
-            
-            // Update UI Panel
-            document.getElementById('case-title').innerText = jsonData.caseName || 'Untitled Case';
-            document.getElementById('case-description').innerText = jsonData.description || 'No description available.';
-            
-            const { geometry, markers, nurbs } = GeometryParser.parseMesh(jsonData);
-            this.viewer.loadMesh(geometry, markers, nurbs);
+
+            const isSTP = this.currentCase.toLowerCase().endsWith('.stp')
+                       || this.currentCase.toLowerCase().endsWith('.step');
+
+            if (isSTP) {
+                const buffer = await response.arrayBuffer();
+                const parsed = STPImporter.parseBuffer(buffer);
+                const geometry = STPImporter.toBufferGeometry(parsed);
+                this.viewer.loadMesh(geometry, [], null);
+                document.getElementById('case-title').innerText = this.currentCase;
+                document.getElementById('case-description').innerText = 'STEP file loaded via STPImporter';
+            } else {
+                const jsonData = await response.json();
+                console.log('Case Loaded:', jsonData.caseName);
+                document.getElementById('case-title').innerText = jsonData.caseName || 'Untitled Case';
+                document.getElementById('case-description').innerText = jsonData.description || 'No description available.';
+                const { geometry, markers, nurbs } = GeometryParser.parseMesh(jsonData);
+                this.viewer.loadMesh(geometry, markers, nurbs);
+            }
         } catch (error) {
             console.error('Error loading data:', error);
         }
@@ -109,3 +114,4 @@ class App {
 const app = new App();
 app.init();
 
+export { app };
